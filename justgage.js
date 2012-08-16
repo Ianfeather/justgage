@@ -55,7 +55,7 @@ JustGage = function(config) {
     
     // gaugeColor : string
     // background color of gauge element 
-    gaugeColor : (config.gaugeColor) ? config.gaugeColor : "#edebeb",
+    gaugeColor : (config.gaugeColor) ? config.gaugeColor : "#B8D544",
     
     // label : string
     // text to show below value
@@ -107,7 +107,19 @@ JustGage = function(config) {
     
     // refreshAnimationType : string
     // type of refresh animation (linear, >, <,  <>, bounce) 
-    refreshAnimationType : (config.refreshAnimationType) ? config.refreshAnimationType : ">"
+    refreshAnimationType : (config.refreshAnimationType) ? config.refreshAnimationType : ">",
+    
+    // target : int
+    // target value
+    targetValue : (config.targetValue != null) ? config.targetValue : 75,
+
+    // showTarget
+    // hide or display target line
+    showTarget : (config.showTarget != null) ? config.showTarget : true,
+    
+    // targetColor : string
+    // background color of target element 
+    targetColor : (config.targetColor) ? config.targetColor : "#FC1C1C"
   };
   
   // overflow values
@@ -117,7 +129,7 @@ JustGage = function(config) {
   
   // canvas
   this.canvas = Raphael(this.config.id, "100%", "100%");
-  
+
   // canvas dimensions
   //var canvasW = document.getElementById(this.config.id).clientWidth;
   //var canvasH = document.getElementById(this.config.id).clientHeight;
@@ -148,6 +160,11 @@ JustGage = function(config) {
   var valueX = dx + widgetW / 2;
   var valueY = dy + widgetH / 1.4;
   
+  // target value
+  var valueFontSize = 8;
+  var valueX = dx + widgetW / 2;
+  var valueY = dy + widgetH / 2.4;
+  
   // label 
   var labelFontSize = ((widgetH / 16) > 10) ? (widgetH / 16) : 10;
   var labelX = dx + widgetW / 2;
@@ -164,7 +181,9 @@ JustGage = function(config) {
   var maxX = dx + widgetW - (widgetW / 10) - (widgetW / 6.666666666666667 * this.config.gaugeWidthScale) / 2 ;
   var maxY = dy + widgetH / 1.126760563380282;
   
-  // parameters
+  
+
+  
   this.params  = {
     canvasW : canvasW,
     canvasH : canvasH,
@@ -217,10 +236,20 @@ JustGage = function(config) {
   // gauge
   this.gauge = this.canvas.path().attr({
     "stroke": "none",
-    "fill": this.config.gaugeColor,   
+    "fill": this.config.gaugeColor,
     pki: [this.config.max, this.config.min, this.config.max, this.params.widgetW, this.params.widgetH,  this.params.dx, this.params.dy, this.config.gaugeWidthScale]
   });
   this.gauge.id = this.config.id+"-gauge";
+  
+  
+  // target
+  this.target = this.canvas.path().attr({
+    "stroke": "none",
+    "fill": this.config.targetColor,
+    pki: [this.config.targetValue, this.config.min, this.config.max, this.params.widgetW, this.params.widgetH,  this.params.dx, this.params.dy, this.config.gaugeWidthScale]
+  });
+  this.target.id = this.config.id+"-target";
+  
   
   // level
   this.level = this.canvas.path().attr({
