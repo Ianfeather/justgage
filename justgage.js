@@ -55,7 +55,7 @@ JustGage = function(config) {
     
     // gaugeColor : string
     // background color of gauge element 
-    gaugeColor : (config.gaugeColor) ? config.gaugeColor : "#B8D544",
+    gaugeColor : (config.gaugeColor) ? config.gaugeColor : "#ededed",
     
     // label : string
     // text to show below value
@@ -111,15 +111,16 @@ JustGage = function(config) {
     
     // target : int
     // target value
-    targetValue : (config.targetValue != null) ? config.targetValue : 75,
-
-    // showTarget
-    // hide or display target line
-    showTarget : (config.showTarget != null) ? config.showTarget : true,
+    targetValue : (config.targetValue != null) ? config.targetValue : null,
     
-    // targetColor : string
-    // background color of target element 
-    targetColor : (config.targetColor) ? config.targetColor : "#FC1C1C"
+    // thresholdLower : int
+    // value for lower end of threshold
+    thresholdLower : (config.thresholdLower != null) ? config.thresholdLower : null,
+    
+    // thresholdUpper : int
+    // value for upper end of threshold
+    thresholdUpper : (config.thresholdUpper != null) ? config.thresholdUpper : null
+
   };
   
   // overflow values
@@ -161,9 +162,9 @@ JustGage = function(config) {
   var valueY = dy + widgetH / 1.4;
   
   // target value
-  var valueFontSize = 8;
-  var valueX = dx + widgetW / 2;
-  var valueY = dy + widgetH / 2.4;
+  var targetValueFontSize = 8;
+  var targetValueX = dx + widgetW / 2;
+  var targetValueY = dy + widgetH / 2.4;
   
   // label 
   var labelFontSize = ((widgetH / 16) > 10) ? (widgetH / 16) : 10;
@@ -242,19 +243,10 @@ JustGage = function(config) {
   this.gauge.id = this.config.id+"-gauge";
   
   
-  // target
-  this.target = this.canvas.path().attr({
-    "stroke": "none",
-    "fill": this.config.targetColor,
-    pki: [this.config.targetValue, this.config.min, this.config.max, this.params.widgetW, this.params.widgetH,  this.params.dx, this.params.dy, this.config.gaugeWidthScale]
-  });
-  this.target.id = this.config.id+"-target";
-  
-  
   // level
   this.level = this.canvas.path().attr({
     "stroke": "none",
-    "fill": getColorForPercentage((this.config.value - this.config.min) / (this.config.max - this.config.min), this.config.levelColors, this.config.levelColorsGradient),  
+    "fill": getColor((this.config.value - this.config.min) / (this.config.max - this.config.min), this.config.levelColors, this.config.levelColorsGradient, (this.config.targetValue - this.config.min) / (this.config.max - this.config.min), (this.config.thresholdLower - this.config.min) / (this.config.max - this.config.min), (this.config.thresholdUpper - this.config.min) / (this.config.max - this.config.min)), 
     pki: [this.config.min, this.config.min, this.config.max, this.params.widgetW, this.params.widgetH,  this.params.dx, this.params.dy, this.config.gaugeWidthScale]
   });
   this.level.id = this.config.id+"-level";
@@ -341,7 +333,7 @@ JustGage.prototype.refresh = function(val) {
   if (val > this.config.max) {val = this.config.max;}
   if (val < this.config.min) {val = this.config.min;}
     
-  var color = getColorForPercentage((val - this.config.min) / (this.config.max - this.config.min), this.config.levelColors, this.config.levelColorsGradient);
+  var color = getColor((val - this.config.min) / (this.config.max - this.config.min), this.config.levelColors, this.config.levelColorsGradient, this.config.targetValue, this.config.thresholdLower, this.config.thresholdUpper);
   this.canvas.getById(this.config.id+"-txtvalue").attr({"text":originalVal});
   this.canvas.getById(this.config.id+"-level").animate({pki: [val, this.config.min, this.config.max, this.params.widgetW, this.params.widgetH,  this.params.dx, this.params.dy, this.config.gaugeWidthScale], "fill":color},  this.config.refreshAnimationTime, this.config.refreshAnimationType);
 };
@@ -402,9 +394,46 @@ JustGage.prototype.generateShadow = function(svg, defs) {
     }
 }
 
+
+
+var getColor = function(pct, col, grad, target, lower, upper) {
+  if (target == null) {
+    return getColorForPercentage(pct, col, grad)
+  } else {
+    var range;
+    if (pct > target) {
+      if (upper != null) {
+        range = (target - upper)*-1;
+      } else {
+        return col[0];
+      }
+    } else if (pct < target) {
+      if (lower != null) {
+        range = (target - lower);
+      } else {
+        return col[0];
+      }
+    } else { return col[0] }
+
+    var mid = range/2,
+        diff = target - pct;
+
+    if (lower != null) {
+      
+    }
+    diff = (diff < 0) ? (diff * -1) : diff;
+    if (diff < mid) {
+      return col[0];
+    } else if (diff < range) {
+      return col[1];
+    } else {
+      return col[2];
+    }
+  }
+}
+
 /** Get color for value percentage */
 var getColorForPercentage = function(pct, col, grad) {
-    
     var no = col.length;
     if (no === 1) return col[0];
     var inc = (grad) ? (1 / (no - 1)) : (1 / no);
