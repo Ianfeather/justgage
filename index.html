@@ -11,23 +11,46 @@
 
   <body>
     
-    <div id="gauge" style="width: 1200px; height: 800px;"></div>
+    <div id="ttfb" style="width: 600px; height: 400px;"></div>
+    <div id="conversion" style="width: 600px; height: 400px;"></div>
+    <div id="apiRequests" style="width: 600px; height: 400px;"></div>
     
     
     
     <script src="raphael.js"></script>
     <script src="justgage.js"></script>
     <script>
-      var g = new JustGage({
-        id: "gauge", 
-        value: 62, 
+      var ttfb = new JustGage({
+        id: "ttfb", 
+        value: 0.9, 
+        min: 0,
+        max: 5,
+        targetValue: 0.8,
+        thresholdUpper: 1.2,
+        title: "Time to first byte"
+      }); 
+      
+      var conversion = new JustGage({
+        id: "conversion", 
+        value: 55, 
         min: 0,
         max: 100,
-        thresholdLower: 40,
-        targetValue: 60,
-        thresholdUpper: 80,
-        title: "Conversion: List to detail"
-      }); 
+        targetValue: 58,
+        thresholdLower: 50,
+        title: "User conversion"
+      });
+      
+      var load = new JustGage({
+        id: "apiRequests", 
+        value: 1100, 
+        min: 0,
+        max: 3000,
+        targetValue: 1500,
+        thresholdLower: 1000,
+        thresholdUpper: 2000,
+        title: "Database load"
+      });
+
     </script>
   </body>
 </html>

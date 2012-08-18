@@ -123,6 +123,10 @@ JustGage = function(config) {
 
   };
   
+  // Thresholdvalues
+  lower = (this.config.thresholdLower !== null) ? (this.config.thresholdLower - this.config.min) / (this.config.max - this.config.min) : null;
+  upper = (this.config.thresholdUpper !== null) ? (this.config.thresholdUpper - this.config.min) / (this.config.max - this.config.min) : null;
+  
   // overflow values
   if (config.value > this.config.max) this.config.value = this.config.max; 
   if (config.value < this.config.min) this.config.value = this.config.min;
@@ -246,7 +250,7 @@ JustGage = function(config) {
   // level
   this.level = this.canvas.path().attr({
     "stroke": "none",
-    "fill": getColor((this.config.value - this.config.min) / (this.config.max - this.config.min), this.config.levelColors, this.config.levelColorsGradient, (this.config.targetValue - this.config.min) / (this.config.max - this.config.min), (this.config.thresholdLower - this.config.min) / (this.config.max - this.config.min), (this.config.thresholdUpper - this.config.min) / (this.config.max - this.config.min)), 
+    "fill": getColor((this.config.value - this.config.min) / (this.config.max - this.config.min), this.config.levelColors, this.config.levelColorsGradient, (this.config.targetValue - this.config.min) / (this.config.max - this.config.min), lower, upper), 
     pki: [this.config.min, this.config.min, this.config.max, this.params.widgetW, this.params.widgetH,  this.params.dx, this.params.dy, this.config.gaugeWidthScale]
   });
   this.level.id = this.config.id+"-level";
@@ -329,11 +333,12 @@ JustGage = function(config) {
 /** Refresh gauge level */
 JustGage.prototype.refresh = function(val) {
   // overflow values
-  originalVal = val;
+  var lower, upper, originalVal = val;
   if (val > this.config.max) {val = this.config.max;}
   if (val < this.config.min) {val = this.config.min;}
-    
-  var color = getColor((val - this.config.min) / (this.config.max - this.config.min), this.config.levelColors, this.config.levelColorsGradient, this.config.targetValue, this.config.thresholdLower, this.config.thresholdUpper);
+  lower = (this.config.thresholdLower !== null) ? (this.config.thresholdLower - this.config.min) / (this.config.max - this.config.min) : null;
+  upper = (this.config.thresholdUpper !== null) ? (this.config.thresholdUpper - this.config.min) / (this.config.max - this.config.min) : null;
+  var color = getColor((val - this.config.min) / (this.config.max - this.config.min), this.config.levelColors, this.config.levelColorsGradient, (this.config.targetValue - this.config.min) / (this.config.max - this.config.min), lower, upper);
   this.canvas.getById(this.config.id+"-txtvalue").attr({"text":originalVal});
   this.canvas.getById(this.config.id+"-level").animate({pki: [val, this.config.min, this.config.max, this.params.widgetW, this.params.widgetH,  this.params.dx, this.params.dy, this.config.gaugeWidthScale], "fill":color},  this.config.refreshAnimationTime, this.config.refreshAnimationType);
 };
@@ -397,38 +402,28 @@ JustGage.prototype.generateShadow = function(svg, defs) {
 
 
 var getColor = function(pct, col, grad, target, lower, upper) {
-  if (target == null) {
+  if (target === null) {
     return getColorForPercentage(pct, col, grad)
   } else {
-    var range;
+    var range,
+        diff = target - pct,
+        diff = (diff < 0) ? (diff*-1) : diff;
     if (pct > target) {
-      if (upper != null) {
+      if (upper !== null) {
         range = (target - upper)*-1;
       } else {
         return col[0];
       }
     } else if (pct < target) {
-      if (lower != null) {
+      if (lower !== null) {
         range = (target - lower);
+        
       } else {
         return col[0];
       }
     } else { return col[0] }
-
-    var mid = range/2,
-        diff = target - pct;
-
-    if (lower != null) {
-      
-    }
-    diff = (diff < 0) ? (diff * -1) : diff;
-    if (diff < mid) {
-      return col[0];
-    } else if (diff < range) {
-      return col[1];
-    } else {
-      return col[2];
-    }
+    var mid = range/2;
+    if (diff < mid) { return col[0] } else if (diff < range) { return col[1] } else {return col[2]};
   }
 }
 
